@@ -1,12 +1,20 @@
 package com.example.babysteps_android;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+
+import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -89,9 +97,16 @@ public class MainActivity extends Activity {
             // params[1] is device_id
             // params[2] is device_type
             try {
-                return doPost(params[0], params[1], params[2]);
-            } catch (IOException e) {
-                return "Connection failed! Error - " + e.getLocalizedMessage();
+                String postBody = getPostJson(params[0], params[1], params[2]);
+                return doPost(postBody);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                return "Connection failed! Error - " + e.toString();
+            }
+            catch (JSONException e) {
+                e.printStackTrace();
+                return "Error parsing JSON: " + e.toString();
             }
         }
 
@@ -104,45 +119,72 @@ public class MainActivity extends Activity {
         // Given a URL, establishes an HttpUrlConnection and retrieves
         // the web page content as a InputStream, which it returns as
         // a string.
-        private String doPost(String username, String device_id, String device_type) throws IOException {
-            InputStream is = null;
-            // Only display the first 500 characters of the retrieved
-            // web page content.
-            int len = 500;
+        private String doPost(String postBody) throws IOException {
+//            return postBody;
+            InputStream inputStream = null;
+            HttpURLConnection conn = null;
 
             try {
+                // Create the connection
                 URL url = new URL("http://10.0.2.2:9000/users");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn = (HttpURLConnection) url.openConnection();
                 conn.setReadTimeout(10000 /* milliseconds */);
                 conn.setConnectTimeout(15000 /* milliseconds */);
-                conn.setRequestMethod("GET");
                 conn.setDoInput(true);
-                // Starts the query
+                conn.setDoOutput(true);
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
                 conn.connect();
+                
+                // Send the POST body
+                DataOutputStream out = new DataOutputStream(conn.getOutputStream());
+                out.writeBytes(postBody);
+                out.flush();
+                out.close();
+
+                // Get the response
                 int response = conn.getResponseCode();
-                Log.d(DEBUG_TAG, "The response is: " + response);
-                is = conn.getInputStream();
+                Log.d(DEBUG_TAG, "The response code is: " + response);
 
-                // Convert the InputStream into a string
-                String contentAsString = readIt(is, len);
+                if (response > 199 && response < 300) {
+                    inputStream = conn.getInputStream();
+                } else {
+                    inputStream = conn.getErrorStream();
+                }
+                
+                String contentAsString = inputStreamToString(inputStream);
+                Log.d(DEBUG_TAG, "The response body is: " + contentAsString);
+
                 return contentAsString;
-
-                // Makes sure that the InputStream is closed after the app is
-                // finished using it.
             } finally {
-                if (is != null) {
-                    is.close();
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+                if (conn != null) {
+                    conn.disconnect();
                 }
             }
         }
         
         // Reads an InputStream and converts it to a String.
-        private String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-            Reader reader = null;
-            reader = new InputStreamReader(stream, "UTF-8");
-            char[] buffer = new char[len];
-            reader.read(buffer);
-            return new String(buffer);
+        private String inputStreamToString(InputStream stream) throws IOException, UnsupportedEncodingException {
+//            Reader reader = null;
+//            reader = new InputStreamReader(stream, "UTF-8");
+//            char[] buffer = new char[len];
+//            reader.read(buffer);
+//            return new String(buffer);
+            
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(stream, writer, "UTF-8");
+            return writer.toString();
+        }
+        
+        private String getPostJson(String username, String device_id, String device_type) throws JSONException {
+            JSONObject jsonParam = new JSONObject();
+            jsonParam.put("device_type", device_type);
+            jsonParam.put("device_id", device_id);
+            jsonParam.put("username", username);
+            return jsonParam.toString();
         }
     }
 }
