@@ -25,6 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:text="@string/create_account" />
+        android:text="@string/create_account"
+        android:onClick="createAccount" />
 
 </RelativeLayout>

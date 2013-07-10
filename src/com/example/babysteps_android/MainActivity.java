@@ -3,6 +3,7 @@ package com.example.babysteps_android;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
+import android.view.View;
 
 public class MainActivity extends Activity {
 
@@ -20,4 +21,11 @@ public class MainActivity extends Activity {
         return true;
     }
     
+    /***
+     * Responds to Create Account button click
+     * @param view
+     */
+    public void onClick(View view) {
+    	
+    }
 }
