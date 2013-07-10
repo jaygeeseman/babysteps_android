@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.view.Menu;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
@@ -31,5 +32,8 @@ public class MainActivity extends Activity {
     public void createAccount(View view) {
     	EditText editText = (EditText) findViewById(R.id.username_field);
     	String message = editText.getText().toString();
+    	
+    	TextView resultLabel = (TextView) findViewById(R.id.result_label);
+    	resultLabel.setText(message);
     }
 }

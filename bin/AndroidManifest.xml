@@ -22,14 +22,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.example.babysteps_android.CreateAccountActivity"
-            android:label="@string/title_activity_create_account"
-            android:parentActivityName="com.example.babysteps_android.MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.babysteps_android.MainActivity" />
-        </activity>
     </application>
 
 </manifest>
