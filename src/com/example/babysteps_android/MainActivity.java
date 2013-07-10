@@ -2,12 +2,14 @@ package com.example.babysteps_android;
 
 import android.os.Bundle;
 import android.app.Activity;
-import android.content.Intent;
 import android.view.Menu;
 import android.view.View;
+import android.widget.EditText;
 
 public class MainActivity extends Activity {
 
+	public final static String EXTRA_MESSAGE = "com.example.babysteps_android.MESSAGE";
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,7 +28,8 @@ public class MainActivity extends Activity {
      * Responds to Create Account button click
      * @param view
      */
-    public void onClick(View view) {
-    	Intent intent = new Intent(this, CreateAccountActivity.class);
+    public void createAccount(View view) {
+    	EditText editText = (EditText) findViewById(R.id.username_field);
+    	String message = editText.getText().toString();
     }
 }
