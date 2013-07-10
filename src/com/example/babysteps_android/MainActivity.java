@@ -120,7 +120,6 @@ public class MainActivity extends Activity {
         // the web page content as a InputStream, which it returns as
         // a string.
         private String doPost(String postBody) throws IOException {
-//            return postBody;
             InputStream inputStream = null;
             HttpURLConnection conn = null;
 
@@ -168,12 +167,6 @@ public class MainActivity extends Activity {
         
         // Reads an InputStream and converts it to a String.
         private String inputStreamToString(InputStream stream) throws IOException, UnsupportedEncodingException {
-//            Reader reader = null;
-//            reader = new InputStreamReader(stream, "UTF-8");
-//            char[] buffer = new char[len];
-//            reader.read(buffer);
-//            return new String(buffer);
-            
             StringWriter writer = new StringWriter();
             IOUtils.copy(stream, writer, "UTF-8");
             return writer.toString();
