@@ -19,4 +19,12 @@
         android:hint="@string/enter_username"
         android:inputType="text" />
 
+    <Button
+        android:id="@+id/create_account_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/create_account" />
+
 </RelativeLayout>
