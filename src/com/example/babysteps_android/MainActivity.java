@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
@@ -21,6 +22,8 @@ import android.content.Context;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -54,9 +57,9 @@ public class MainActivity extends Activity {
 
         TextView resultLabel = (TextView) findViewById(R.id.result_label);
         resultLabel.setText(String.format("Trying to create new account for %s...", username));
-
+        
         if (!isNetworkAvailable()) {
-            resultLabel.setText("No network connection available.");
+            resultLabel.append("No network connection available.");
             return;
         }
 
@@ -73,9 +76,8 @@ public class MainActivity extends Activity {
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -85,7 +87,7 @@ public class MainActivity extends Activity {
      * an InputStream. Finally, the InputStream is converted into a string, which is
      * displayed in the UI by the AsyncTask's onPostExecute method.
      */
-    private class CreateAccountTask extends AsyncTask<String, Void, String> {
+    private class CreateAccountTask extends AsyncTask<String, String, String> {
         @Override
         protected String doInBackground(String... params) {
             // params comes from the execute() call:
@@ -94,7 +96,8 @@ public class MainActivity extends Activity {
             // params[2] is device_type
             try {
                 String postBody = getPostJson(params[0], params[1], params[2]);
-                return doPost(postBody);
+                String responseBody = doPost(postBody);
+                return responseBody;
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -109,12 +112,26 @@ public class MainActivity extends Activity {
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String result) {
-            resultLabel.setText(result);
+            String userResult = handlePostResponse(result);
+            resultLabel.append("\n\n" +userResult);
         }
+        
+//        @Override
+//        protected void onProgressUpdate(String... values) {
+//            if (values[0].equals("success")) {
+//                // Deactivate submit button
+//                ((Button)findViewById(R.id.create_account_button)).setEnabled(false);
+//            }
+//
+//        }
 
-        // Given a URL, establishes an HttpUrlConnection and retrieves
-        // the web page content as a InputStream, which it returns as
-        // a string.
+        /**
+         * Executes the HTTP POST to tell our service to create a new user account.
+         * Returns the response body.
+         * @param postBody
+         * @return
+         * @throws IOException
+         */
         private String doPost(String postBody) throws IOException {
             InputStream inputStream = null;
             HttpURLConnection conn = null;
@@ -161,11 +178,67 @@ public class MainActivity extends Activity {
             }
         }
         
-        // Reads an InputStream and converts it to a String.
+        /**
+         * Reads an InputStream and converts it to a String.
+         * @param stream
+         * @return
+         * @throws IOException
+         * @throws UnsupportedEncodingException
+         */
         private String inputStreamToString(InputStream stream) throws IOException, UnsupportedEncodingException {
             StringWriter writer = new StringWriter();
             IOUtils.copy(stream, writer, "UTF-8");
             return writer.toString();
+        }
+
+        /**
+         * Parses the JSON response and returns a string result to be displayed to the user
+         * @param response
+         * @return
+         */
+        private String handlePostResponse(String response) {
+            JSONObject jsonObject = null;
+            StringBuilder result = new StringBuilder(response);
+            String jsonStatus = null;
+            String jsonMessage = null;
+            
+            try {
+                jsonObject = new JSONObject(response);
+                
+                // This commented block lets us know what's up with JSON parsing
+//                Iterator keys = jsonObject.keys();
+//                while (keys.hasNext()) {
+//                    String key = (String)keys.next();
+//                    result.append(String.format("Key: %s Value: %s\n", key, (String)jsonObject.getString(key)));
+//                }
+            }
+            catch (JSONException e) {
+                result.append("\n\nError parsing JSON: " + e.toString());
+            }
+
+            jsonStatus = jsonObject.optString("status", "");
+            jsonMessage = jsonObject.optString("message", "");
+            
+            if (jsonStatus.equals("") || jsonMessage.equals("")) {
+                result.append("\n\nInvalid response. Expected 'status' and 'message' elements. Got " + response);
+            } else if (jsonStatus.equals("success")) {
+                // Deactivate submit button
+                ((Button)findViewById(R.id.create_account_button)).setEnabled(false);
+                result.append("\n\nYour account has been created.");
+            } else if (jsonStatus.equals("duplicate")) {
+                // Select input field
+                EditText usernameField = (EditText)findViewById(R.id.username_field);
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(usernameField, InputMethodManager.SHOW_IMPLICIT);
+                result.append("\n\nThat username already exists. Please try another.");
+            } else if (jsonStatus.equals("fail")) {
+                result.append("\n\nError. See output above.");
+            } else {
+                result.append("\n\n" + String.format("Unrecognized status \"%s\"", jsonStatus));
+            }
+            
+            publishProgress(jsonStatus);
+            return result.toString();
         }
         
         private String getPostJson(String username, String device_id, String device_type) throws JSONException {

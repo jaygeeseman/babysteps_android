@@ -36,7 +36,7 @@
         android:layout_alignLeft="@+id/username_field"
         android:layout_alignRight="@+id/username_field"
         android:layout_below="@+id/textView1"
-        android:text="result" />
+        android:text="" />
 
     <TextView
         android:id="@+id/textView1"
