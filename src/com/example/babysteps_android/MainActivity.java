@@ -116,15 +116,6 @@ public class MainActivity extends Activity {
             resultLabel.append("\n\n" +userResult);
         }
         
-//        @Override
-//        protected void onProgressUpdate(String... values) {
-//            if (values[0].equals("success")) {
-//                // Deactivate submit button
-//                ((Button)findViewById(R.id.create_account_button)).setEnabled(false);
-//            }
-//
-//        }
-
         /**
          * Executes the HTTP POST to tell our service to create a new user account.
          * Returns the response body.
